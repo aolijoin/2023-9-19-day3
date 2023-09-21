@@ -42,3 +42,9 @@ mybatis-plus:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
   # mapper xml路径
   mapper-locations: classpath:mapper/*.xml
+
+#    <script src="/js/vue.js"></script>
+#    <link rel="stylesheet" href="/css/elementUI.css">
+#    <script src="/js/elementUI.js"></script>
+#    <script src="/js/axios.js"></script>
+#    <script src="/js/util.js"></script>

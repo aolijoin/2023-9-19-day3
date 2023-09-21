@@ -21,6 +21,7 @@ public class Student implements Serializable {
     @TableField(value = "img")
     private String imgUrl;
     private Integer tid;
+    @TableLogic(value = "0", delval = "1")
     private Integer del;
 
     @TableField(exist = false)

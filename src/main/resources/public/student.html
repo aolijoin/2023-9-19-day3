@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>学生管理</title>
+
+    <script src="/js/vue.js"></script>
+    <link rel="stylesheet" href="/css/elementUI.css">
+    <script src="/js/elementUI.js"></script>
+    <script src="/js/axios.js"></script>
+    <script src="/js/util.js"></script>
+</head>
+<body>
+<div id="app">
+    姓名
+    <el-input v-model="query.name" placeholder="请输入学生姓名" style="width: 180px" size="small"></el-input>
+    年龄
+    <el-input v-model="query.ageStr" placeholder="请输入学生年龄区间" style="width: 180px"></el-input>
+    生日
+    <el-date-picker
+            v-model="query.startTime"
+            type="date"
+            placeholder="开始日期" style="width: 180px">
+    </el-date-picker>
+    —
+    <el-date-picker
+            v-model="query.endTime"
+            type="date"
+            placeholder="结束日期" style="width: 180px">
+    </el-date-picker>
+    讲师
+    <el-select v-model="query.tid" clearable placeholder="请选择" style="width: 180px">
+        <el-option
+                v-for="item in teachers"
+                :key="item.id"
+                :label="item.name"
+                :value="item.id">
+        </el-option>
+    </el-select>
+    课程
+    <el-select v-model="query.cid" clearable placeholder="请选择" style="width: 180px">
+        <el-option
+                v-for="item in courses"
+                :key="item.id"
+                :label="item.name"
+                :value="item.id">
+        </el-option>
+
+    </el-select>
+    <el-button type="primary" size="small" round @click="initTable">搜索</el-button>
+    <el-button type="danger" size="small" round @click="raset">重置</el-button>
+    <el-button type="success" round @click="addStudentPage">添加</el-button>
+    <template>
+        <el-table
+                :data="pageInfo.list"
+                style="width: 100%">
+            <el-table-column
+                    type="selection"
+                    width="55">
+            </el-table-column>
+            <el-table-column
+                    prop="id"
+                    label="编号"
+                    width="140">
+            </el-table-column>
+            <el-table-column
+                    prop="name"
+                    label="姓名"
+                    width="140">
+
+            </el-table-column>
+            <el-table-column
+                    prop="sex"
+                    label="性别" width="100px">
+                <template slot-scope="scope">
+                    {{scope.row.sex == 0 ? '男' : '女'}}
+                </template>
+            </el-table-column>
+
+
+            <el-table-column
+                    prop="age"
+                    label="年龄"
+                    width="140">
+            </el-table-column>
+            <el-table-column
+                    prop="birthday"
+                    label="生日">
+                <template slot-scope="scope">
+                    {{scope.row.birthday|format("yyyy-MM-dd")}}
+                </template>
+            </el-table-column>
+
+            <el-table-column
+                    prop="hobby"
+                    label="爱好"
+                    width="180">
+            </el-table-column>
+            <el-table-column
+                    prop="teacher"
+                    label="讲师">
+            </el-table-column>
+            <el-table-column
+                    prop="course"
+                    label="课程"
+                    width="180">
+            </el-table-column>
+            <el-table-column label="操作">
+                <template slot-scope="scope">
+                    <el-button
+                            size="mini"
+                            @click="handleEdit(scope.row)">编辑
+                    </el-button>
+                    <el-button
+                            size="mini"
+                            type="danger"
+                            @click="handleDelete(scope.row.id)">删除
+                    </el-button>
+                </template>
+            </el-table-column>
+        </el-table>
+    </template>
+    <el-pagination
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+            :current-page="pageInfo.pageNum"
+            :page-sizes="[10, 20, 30, 40]"
+            :page-size="pageInfo.pageSize"
+            layout="total, sizes, prev, pager, next, jumper"
+            :total="pageInfo.total">
+    </el-pagination>
+
+    <el-dialog :title="model.title" :visible.sync="dialogFormVisible">
+        <el-form :model="form">
+            <el-input v-model="form.id" type="hidden" autocomplete="off"></el-input>
+            <el-form-item label="名字" :label-width="formLabelWidth">
+                <el-input v-model="form.name" autocomplete="off"></el-input>
+            </el-form-item>
+            <el-form-item label="活动区域" :label-width="formLabelWidth">
+                <el-radio-group v-model="form.sex">
+                    <el-radio :label="0">男</el-radio>
+                    <el-radio :label="1">女</el-radio>
+                </el-radio-group>
+            </el-form-item>
+            <el-form-item label="年龄" :label-width="formLabelWidth">
+                <el-input v-model="form.age" type="number" autocomplete="off"></el-input>
+            </el-form-item>
+            <el-form-item label="生日" :label-width="formLabelWidth">
+                <el-date-picker
+                        v-model="form.birthday"
+                        type="date"
+                        placeholder="选择日期">
+                </el-date-picker>
+            </el-form-item>
+            <el-form-item label="爱好" :label-width="formLabelWidth">
+                <el-checkbox-group v-model="hobbyArr">
+                    <el-checkbox label="吃"></el-checkbox>
+                    <el-checkbox label="喝"></el-checkbox>
+                    <el-checkbox label="玩"></el-checkbox>
+                    <el-checkbox label="乐"></el-checkbox>
+                </el-checkbox-group>
+            </el-form-item>
+            <el-form-item label="讲师" :label-width="formLabelWidth">
+                <el-select v-model="form.tid" clearable placeholder="请选择" style="width: 180px" @change='useCourse'>
+                    <el-option
+                            v-for="item in teachers"
+                            :key="item.id"
+                            :label="item.name"
+                            :value="item.id">
+                    </el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="课程" :label-width="formLabelWidth">
+                <el-select v-model="form.cid" clearable placeholder="请选择" style="width: 180px" disabled="true">
+                    <el-option
+                            v-for="item in courses"
+                            :key="item.id"
+                            :label="item.name"
+                            :value="item.id">
+                    </el-option>
+
+                </el-select>
+            </el-form-item>
+            <el-form-item label="头像" :label-width="formLabelWidth">
+                <el-input v-model="form.img" type="file" autocomplete="off"></el-input>
+            </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+            <el-button @click="dialogFormVisible = false">取 消</el-button>
+            <el-button type="primary" @click="addStudent">确 定</el-button>
+        </div>
+    </el-dialog>
+</div>
+</body>
+<script>
+    new Vue({
+        el: '#app',
+        data: {
+            model: {
+                title: '',
+                url: ''
+            },
+            hobbyArr: [],
+            form: {
+                id: '',
+                name: '',
+                sex: '',
+                age: '',
+                birthday: '',
+                hobby: '',
+                tid: ''
+            },
+            formLabelWidth: '120px',
+            dialogFormVisible: false,
+            page: {
+                pageNum: 1,
+                pageSize: 3
+            },
+            pageInfo: {},
+            query: {
+                name: '',
+                ageStr: '',
+                startTime: '',
+                endTime: '',
+                tid: '',
+                cid: ''
+            },
+            teachers: [],
+            courses: [],
+        },
+        filters: {
+            format(value, arg) {
+                function dateFormat(date, format) {
+                    if (typeof date === "string") {
+                        var mts = date.match(/(\/Date\((\d+)\)\/)/);
+                        if (mts && mts.length >= 3) {
+                            date = parseInt(mts[2]);
+                        }
+                    }
+                    date = new Date(date);
+                    if (!date || date.toUTCString() == "Invalid Date") {
+                        return "";
+                    }
+                    var map = {
+                        "M": date.getMonth() + 1, //月份
+                        "d": date.getDate(), //日
+                        "h": date.getHours(), //小时
+                        "m": date.getMinutes(), //分
+                        "s": date.getSeconds(), //秒
+                        "q": Math.floor((date.getMonth() + 3) / 3), //季度
+                        "S": date.getMilliseconds() //毫秒
+                    };
+                    format = format.replace(/([yMdhmsqS])+/g, function (all, t) {
+                        var v = map[t];
+                        if (v !== undefined) {
+                            if (all.length > 1) {
+                                v = '0' + v;
+                                v = v.substr(v.length - 2);
+                            }
+                            return v;
+                        } else if (t === 'y') {
+                            return (date.getFullYear() + '').substr(4 - all.length);
+                        }
+                        return all;
+                    });
+                    return format;
+                }
+
+                return dateFormat(value, arg);
+            }
+        },
+        methods: {
+            handleDelete(id) {
+                axios.post(`stu/deleted?id=${id}`).then(res => {
+                    if (res.data == true) {
+                        this.$message({
+                            message: '操作成功',
+                            type: 'success',
+                        });
+                        this.dialogFormVisible = false
+                        this.initTable()
+                    } else {
+                        this.$message({
+                            message: '操作失败',
+                            type: 'warning',
+                        });
+                    }
+                })
+            },
+            handleEdit(row) {
+                this.form = row
+                this.form.cid = row.tid
+                this.hobbyArr = row.hobby.split(',')
+                this.model.title = '修改'
+                this.dialogFormVisible = true
+            },
+            addStudent() {
+                this.form.hobby = this.hobbyArr.join(',')
+                axios.post(`stu/addStudent`, this.form).then(res => {
+                    if (res.data == true) {
+                        this.$message({
+                            message: '操作成功',
+                            type: 'success',
+                        });
+                        this.dialogFormVisible = false
+                        this.initTable()
+                    } else {
+                        this.$message({
+                            message: '操作失败',
+                            type: 'warning',
+                        });
+                    }
+                })
+            },
+            useCourse() {
+                this.form.cid = this.form.tid
+            },
+            addStudentPage() {
+                this.hobbyArr = []
+                this.form = {}
+                this.dialogFormVisible = true
+                this.model.title = '添加'
+                this.model.url = 'stu/addStu'
+            },
+            raset() {
+                this.query = {}
+            },
+            handleCurrentChange(val) {
+                this.page.pageNum = val
+                this.initTable()
+            },
+            handleSizeChange(val) {
+                this.page.pageSize = val
+                this.initTable()
+            },
+            initTable() {
+                axios.post(`stu/findAllStu?pageNum=${this.page.pageNum}&pageSize=${this.page.pageSize}`, this.query).then(res => {
+                    this.pageInfo = res.data;
+                })
+            },
+            initTea() {
+                axios.post(`teacher/findTeachers`).then(res => {
+                    this.teachers = res.data;
+                })
+            },
+            initCour() {
+                axios.post(`course/findCourses`).then(res => {
+                    this.courses = res.data;
+                })
+            }
+        },
+        created() {
+            this.initTable();
+            this.initTea();
+            this.initCour();
+        }
+    })
+</script>
+</html>

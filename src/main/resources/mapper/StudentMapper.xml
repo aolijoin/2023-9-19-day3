@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.jiyun.mapper.StudentMapper">
+    <select id="selectAllStu" resultType="cn.jiyun.pojo.Student">
+        select s.*, t.name teacher, c.name course
+        from userdb.tb_student s
+        left join userdb.tb_teacher t on s.tid = t.id
+        left join userdb.tb_course c on t.cid = c.id
+        <where>
+            and s.del=0
+            <if test="name!=null and name!=''">
+                and s.name like CONCAT('%',#{name},'%')
+            </if>
+            <if test="startTime!=null">
+                and s.birthday &gt;= #{startTime}
+            </if>
+            <if test="endTime!=null">
+                and s.birthday &lt;= #{endTime}
+            </if>
+            <if test="startAge!=null">
+                and s.age &gt;= #{startAge}
+            </if>
+            <if test="endAge!=null">
+                and s.age &lt;= #{endAge}
+            </if>
+            <if test="tid!=null">
+                and s.tid =#{tid}
+            </if>
+            <if test="cid!=null">
+                and c.id = #{cid}
+            </if>
+
+        </where>
+    </select>
+</mapper>

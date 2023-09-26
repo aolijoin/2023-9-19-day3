@@ -3,6 +3,7 @@ package cn.jiyun.service;
 import cn.jiyun.pojo.Student;
 
 import java.util.List;
+import java.util.Map;
 
 public interface StudentService {
     /**
@@ -36,4 +37,6 @@ public interface StudentService {
      * @return 返回true 表示操作成功 false 表示操作失败
      */
     boolean deletedList(List<Integer> ids);
+
+    Map<String, Object> getCount();
 }

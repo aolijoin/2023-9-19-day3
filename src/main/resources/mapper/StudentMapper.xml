@@ -4,7 +4,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="cn.jiyun.mapper.StudentMapper">
     <select id="selectAllStu" resultType="cn.jiyun.pojo.Student">
-        select s.*, t.name teacher, c.name course
+        select s.*, t.name teacher, c.name course,s.img imgUrl
         from userdb.tb_student s
         left join userdb.tb_teacher t on s.tid = t.id
         left join userdb.tb_course c on t.cid = c.id
@@ -33,5 +33,15 @@
             </if>
 
         </where>
+    </select>
+    <select id="getCount" resultType="java.util.Map">
+        select c.name name ,count(ts.id) num
+        from userdb.tb_course c
+                 left join userdb.tb_teacher tt on c.id = tt.cid
+                 left join userdb.tb_student ts on tt.id = ts.tid
+        <where>
+            and ts.del=0
+        </where>
+        group by c.name
     </select>
 </mapper>

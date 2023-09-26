@@ -18,8 +18,10 @@ public class Student implements Serializable {
     private Integer age;
     private Date birthday;
     private String hobby;
-    @TableField(value = "img")
+
+  @TableField(value = "img")
     private String imgUrl;
+
     private Integer tid;
     @TableLogic(value = "0", delval = "1")
     private Integer del;

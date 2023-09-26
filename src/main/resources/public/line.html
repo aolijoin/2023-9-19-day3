@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="/css/elementUI.css">
+    <script src="/js/vue.js"></script>
+    <script src="/js/elementUI.js"></script>
+    <script src="/js/axios.js"></script>
+    <script src="/js/echarts.js"></script>
+
+</head>
+<body>
+<div id="app">
+    <div id="chart" style="height:600px;width:60%;float: left"></div>
+</div>
+</body>
+<script>
+    new Vue({
+        el: "#app",
+        data: {
+            values: []
+            , names: []
+        },
+        methods: {
+            initData() {
+                //第一个data是统计的名称eg宿舍号
+                //第二个data是统计的数量eg：num
+                let myChart = echarts.init(document.getElementById('chart'));
+                axios.get(`/stu/getCount`).then(res => {
+                    let list = res.data.list
+                    for (let i = 0; i < list.length; i++) {
+                        this.values[i] = list[i].num;
+                        this.names[i] = list[i].name;
+                    }
+                    let option = {
+                        title: {
+                            text: '部门人数'
+                        },
+                        tooltip: {},
+                        legend: {
+                            data: ['部门人数']
+                        },
+                        xAxis: {
+                            // data: res.data.names
+                            data: this.names
+                        },
+                        yAxis: {
+                            type: 'value'
+                        },
+                        series: [{
+                            name: '部门人数',
+                            type: 'line',
+                            // data: res.data.nums
+                            data: this.values
+                        }]
+                    };
+                    myChart.setOption(option);
+                })
+
+            },
+        },
+        mounted() {
+            this.initData();
+        }
+    })
+</script>
+</html>

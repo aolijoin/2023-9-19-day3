@@ -9,6 +9,36 @@
     <script src="/js/elementUI.js"></script>
     <script src="/js/axios.js"></script>
     <script src="/js/util.js"></script>
+    <style>
+
+        .avatar-uploader .el-upload {
+            border: 1px dashed #d9d9d9;
+            border-radius: 6px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .avatar-uploader .el-upload:hover {
+            border-color: #409EFF;
+        }
+
+        .avatar-uploader-icon {
+            font-size: 28px;
+            color: #8c939d;
+            width: 178px;
+            height: 178px;
+            line-height: 178px;
+            text-align: center;
+        }
+
+        .avatar {
+            width: 178px;
+            height: 178px;
+            display: block;
+        }
+
+    </style>
 </head>
 <body>
 <div id="app">
@@ -51,6 +81,8 @@
     <el-button type="danger" size="small" round @click="raset">重置</el-button>
     <el-button type="success" round @click="addStudentPage">添加</el-button>
     <el-button type="success" round @click="deleted">多选删除</el-button>
+    <el-button type="success" round @click="toCount">饼状图</el-button>
+    <el-button type="success" round @click="toline">线形图</el-button>
     <template>
         <el-table
                 :data="pageInfo.list"
@@ -69,7 +101,6 @@
                     prop="name"
                     label="姓名"
                     width="140">
-
             </el-table-column>
             <el-table-column
                     prop="sex"
@@ -78,8 +109,6 @@
                     {{scope.row.sex == 0 ? '男' : '女'}}
                 </template>
             </el-table-column>
-
-
             <el-table-column
                     prop="age"
                     label="年龄"
@@ -92,7 +121,13 @@
                     {{scope.row.birthday|format("yyyy-MM-dd")}}
                 </template>
             </el-table-column>
-
+            <el-table-column
+                    prop="imgUrl"
+                    label="头像">
+                <template slot-scope="scope">
+                    <img :src="scope.row.imgUrl" class="avatar">
+                </template>
+            </el-table-column>
             <el-table-column
                     prop="hobby"
                     label="爱好"
@@ -138,7 +173,7 @@
             <el-form-item label="名字" :label-width="formLabelWidth">
                 <el-input v-model="form.name" autocomplete="off"></el-input>
             </el-form-item>
-            <el-form-item label="活动区域" :label-width="formLabelWidth">
+            <el-form-item label="性别" :label-width="formLabelWidth">
                 <el-radio-group v-model="form.sex">
                     <el-radio :label="0">男</el-radio>
                     <el-radio :label="1">女</el-radio>
@@ -153,6 +188,18 @@
                         type="date"
                         placeholder="选择日期">
                 </el-date-picker>
+            </el-form-item>
+            <el-form-item label="头像" :label-width="formLabelWidth">
+                <el-upload
+                        class="avatar-uploader"
+                        action="stu/upload"
+                        :show-file-list="false"
+                        :on-success="handleAvatarSuccess"
+                        :before-upload="beforeAvatarUpload">
+                    <img v-if="imageUrl" :src="imageUrl" class="avatar">
+                    <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+                </el-upload>
+
             </el-form-item>
             <el-form-item label="爱好" :label-width="formLabelWidth">
                 <el-checkbox-group v-model="hobbyArr">
@@ -172,8 +219,8 @@
                     </el-option>
                 </el-select>
             </el-form-item>
-            <el-form-item label="课程" :label-width="formLabelWidth">
-                <el-select v-model="form.cid" clearable placeholder="请选择" style="width: 180px" disabled="true">
+            <el-form-item label="课程" id="course" :label-width="formLabelWidth">
+                <el-select v-model="form.cid" clearable placeholder="请选择" style="width: 180px">
                     <el-option
                             v-for="item in courses"
                             :key="item.id"
@@ -183,7 +230,6 @@
 
                 </el-select>
             </el-form-item>
-
         </el-form>
         <div slot="footer" class="dialog-footer">
             <el-button @click="dialogFormVisible = false">取 消</el-button>
@@ -191,11 +237,13 @@
         </div>
     </el-dialog>
 </div>
+
 </body>
 <script>
     new Vue({
         el: '#app',
         data: {
+            imageUrl: '',
             multipleSelection: [],
             model: {
                 title: '',
@@ -210,6 +258,7 @@
                 birthday: '',
                 hobby: '',
                 tid: '',
+                imgUrl: '',
             },
             formLabelWidth: '120px',
             dialogFormVisible: false,
@@ -271,6 +320,22 @@
             }
         },
         methods: {
+            toline() {
+                debugger
+                //转跳到line页面
+                location.href='line.html'
+            },
+            toCount() {
+                debugger
+                location.href='bing.html'
+            },
+            handleAvatarSuccess(res, file) {
+                this.form.imgUrl = res;
+                this.imageUrl = URL.createObjectURL(file.raw);
+            },
+            beforeAvatarUpload() {
+
+            },
             handleSelectionChange(row) {
                 this.multipleSelection = row
             },
@@ -307,9 +372,7 @@
                     })
 
                 }
-            }
-
-            ,
+            },
             handleDelete(id) {
                 axios.post(`stu/deleted?id=${id}`).then(res => {
                     if (res.data == true) {
@@ -333,6 +396,7 @@
                 this.hobbyArr = row.hobby.split(',')
                 this.model.title = '修改'
                 this.dialogFormVisible = true
+                this.imageUrl = row.imgUrl
             },
             addStudent() {
                 // this.form.img = ;
@@ -355,6 +419,7 @@
             },
             useCourse() {
                 this.form.cid = this.form.tid
+                ("#course").prop("disabled", true)
             },
             addStudentPage() {
                 this.hobbyArr = []
@@ -362,6 +427,7 @@
                 this.dialogFormVisible = true
                 this.model.title = '添加'
                 this.model.url = 'stu/addStu'
+                this.imageUrl = ''
             },
             raset() {
                 this.query = {}
@@ -376,6 +442,7 @@
             },
             initTable() {
                 axios.post(`stu/findAllStu?pageNum=${this.page.pageNum}&pageSize=${this.page.pageSize}`, this.query).then(res => {
+                    debugger;
                     this.pageInfo = res.data;
                 })
             },

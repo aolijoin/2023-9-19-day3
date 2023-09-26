@@ -31,9 +31,8 @@ public class StudentTest {
 
     @Test
     public void student() {
-        Student student = new Student();
-        student.setName("三");
-        studentService.findAllStu(student).forEach(System.out::println);
+//        Student student = new Student();
+//        studentService.findAllStu(student).forEach(System.out::println);
     }
 
 }

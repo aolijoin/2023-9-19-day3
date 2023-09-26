@@ -34,7 +34,8 @@ spring:
   # 允许循环依赖
   main:
     allow-circular-references: true
-
+upload:
+  path: Z:/img/
 # mybatis-plus配置
 mybatis-plus:
   configuration:

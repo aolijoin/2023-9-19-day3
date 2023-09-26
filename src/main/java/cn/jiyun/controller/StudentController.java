@@ -7,6 +7,7 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -17,6 +18,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 @Slf4j
 @RestController
@@ -24,6 +27,9 @@ import java.util.List;
 public class StudentController {
     @Autowired
     private StudentService studentService;
+
+    @Value("${upload.path}")
+    private String path;
 
     @RequestMapping("findAllStu")
     public PageInfo findAllStu(Integer pageNum
@@ -33,25 +39,15 @@ public class StudentController {
         Page<Student> page = new Page<>();
         page.setCurrent(pageNum);
         page.setSize(pageSize);
-
-
         PageHelper.startPage(pageNum, pageSize);
         List<Student> list = studentService.findAllStu(student);
+        System.out.println("--------------------------------"+list);
         return new PageInfo(list);
     }
 
     @RequestMapping("addStudent")
-    public boolean addStudent(@RequestBody Student student, MultipartFile img, HttpSession session) throws IOException {
-        if (img != null && img.getSize() > 0) {
-            String path = session.getServletContext().getRealPath("/images");
-            File dir = new File(path);
-            if (dir.exists()) {
-                dir.mkdirs();
-            }
-            String filename = img.getOriginalFilename();
-            img.transferTo(new File(dir + filename));
-            student.setImgUrl("../images/" + filename);
-        }
+    public boolean addStudent(@RequestBody Student student) {
+
         return studentService.addStu(student);
     }
 
@@ -63,5 +59,26 @@ public class StudentController {
     @RequestMapping("deletedList")
     public boolean deletedList(Integer[] ids) {
         return studentService.deletedList(Arrays.asList(ids));
+    }
+
+    @RequestMapping("upload")
+    public String uploadString(MultipartFile file) {
+        try {
+            if (file != null && file.getSize() > 0) {
+                String filename = file.getOriginalFilename();
+                String img = UUID.randomUUID().toString() + filename.substring(filename.lastIndexOf("."));
+
+                file.transferTo(new File(path + img));
+                return "http://localhost:8080/images/" + img;
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        return null;
+    }
+    @RequestMapping("getCount")
+    public Map<String,Object> getCount(){
+        return studentService.getCount();
     }
 }
